@@ -23,14 +23,14 @@ readonly __base="$(basename ${__file} .sh)"
 main () {
 #  arg1="${1:-}"
 
-#  update_linux
-#  deploy_kubectl
-#  deploy_kubectl_aliases
+  update_linux
+  deploy_kubectl
+  deploy_kubectl_aliases
 #  deploy_kubectl_plugins
 #  deploy_kubectl_prompt
-#  deploy_k9s
-#  deploy_helm
-#  deploy_istioctl
+  deploy_k9s
+  deploy_helm
+  deploy_istioctl
 
   exit 0
 }
@@ -47,8 +47,10 @@ deploy_kubectl() {
   (
     cd "$(mktemp -d)"
     curl --location --remote-name "https://storage.googleapis.com/kubernetes-release/release/${kubectl_version}/bin/linux/amd64/kubectl"
-    chmod +x ./kubectl
-    sudo mv ./kubectl /usr/local/bin/kubectl
+    chmod +x "./kubectl"
+    mkdir --parents "~/.kubectl/bin"
+    mv "./kubectl" "~/.kubectl/bin/kubectl"
+    add_to_path "~/.kubectl/bin"
   )
 }
 
@@ -94,9 +96,11 @@ deploy_k9s() {
   (
     cd "$(mktemp -d)"
     curl --location --remote-name "https://github.com/derailed/k9s/releases/download/${k9s_version}/k9s_Linux_x86_64.tar.gz"
-    tar zxvf ./k9s_Linux_x86_64.tar.gz
-    chmod +x ./k9s
-    sudo mv ./k9s /usr/local/bin/k9s
+    tar zxvf "./k9s_Linux_x86_64.tar.gz"
+    chmod +x "./k9s"
+    mkdir --parents "~/.k9s/bin"
+    mv "./k9s" "~/.k9s/bin/k9s"
+    add_to_path" ~/.k9s/bin"
   )
 }
 
@@ -107,19 +111,34 @@ deploy_helm() {
     cd "$(mktemp -d)"
     curl --location --remote-name "https://get.helm.sh/helm-${helm_version}-linux-amd64.tar.gz"
     tar xvzf "helm-${helm_version}-linux-amd64.tar.gz"
-    chmod +x ./linux-amd64/helm
-    sudo mv ./linux-amd64/helm /usr/local/bin/helm
+    chmod +x "./linux-amd64/helm"
+    mkdir --parents "~/.helm/bin"
+    mv "./linux-amd64/helm" "~/.helm/bin/helm2"
+    add_to_path "~/.helm/bin"
   )
 }
 
 # Install ISTIOCTL
 deploy_istioctl() {
-  (
+  ( 
     cd "${HOME}"
     curl --silent --location "https://istio.io/downloadIstioctl" | sh -
-    source ~/istioctl.bash
-    export PATH=$PATH:$HOME/.istioctl/bin
+    #source ~/istioctl.bash
+    add_to_path "~/.istioctl/bin"
   )
+}
+
+# Add to PATH
+function add_to_path {
+  case ":$PATH:" in
+    *":$1:"*) :;; # already there
+    *) PATH="$PATH:$1";; 
+  esac
+}
+
+# Trim PATH variable from duplicates
+function trim_path(){
+  PATH=$(printf "%s" "$PATH" | awk -v RS=':' '!a[$1]++ { if (NR > 1) printf RS; printf $1 }')
 }
 
 main "${@}"
