@@ -26,8 +26,8 @@ main () {
 #  update_linux
 #  deploy_kubectl
 #  deploy_kubectl_aliases
-  deploy_kubectl_plugins
-  deploy_kubectl_prompt
+#  deploy_kubectl_plugins
+#  deploy_kubectl_prompt
 #  deploy_k9s
   deploy_helm3
 #  deploy_istioctl
@@ -68,16 +68,16 @@ deploy_kubectl_aliases() {
 deploy_kubectl_plugins() {
   local krew_version="v0.3.4"
   (
-    cd "$(mktemp -d)"
+  cd "$(mktemp -d)"
     curl --fail --silent --show-error --location --remote-name "https://github.com/kubernetes-sigs/krew/releases/download/${krew_version}/krew.{tar.gz,yaml}"
-    tar zxvf ./krew.tar.gz
+    tar zxvf "./krew.tar.gz"
     local krew=./krew-"$(uname | tr '[:upper:]' '[:lower:]')_amd64"
     "${krew}" install --manifest=krew.yaml --archive=krew.tar.gz
     "${krew}" update
-    export PATH="${$HOME/.krew}/bin:$PATH"
+    add_to_path "~/.krew/bin"
   )
-  kubectl krew install ctx
-  kubectl krew install ns
+#  kubectl krew install ctx
+#  kubectl krew install ns
 }
 
 # Install BASH PROMPT about K8s
@@ -85,8 +85,9 @@ deploy_kubectl_prompt() {
   (
     cd "${HOME}"
     curl --location --remote-name "https://raw.githubusercontent.com/jonmosco/kube-ps1/master/kube-ps1.sh"
+    chmod +x ./kube-ps1.sh
     source ./kube-ps1.sh
-    PS1='[\u@\h \W $(kube_ps1)]\$ '
+    export PS1='[\u@\h \W $(kube_ps1)]\$ '
   )
 }
 
@@ -106,7 +107,7 @@ deploy_k9s() {
 
 # Install HELM
 deploy_helm2() {
-  local helm2_version="v2.16.7"
+  local helm_version="v2.16.7"
   (
     cd "$(mktemp -d)"
     curl --location --remote-name "https://get.helm.sh/helm-${helm_version}-linux-amd64.tar.gz"
@@ -120,7 +121,7 @@ deploy_helm2() {
 
 #Install HELM 3
 deploy_helm3() {
-  local helm3_version="v3.2.1"
+  local helm_version="v3.2.1"
   (
     cd "$(mktemp -d)"
     curl --location --remote-name "https://get.helm.sh/helm-${helm_version}-linux-amd64.tar.gz"
@@ -143,7 +144,7 @@ deploy_istioctl() {
 }
 
 # Install GIT Bash Prompt
-function deploy_git_prompt{
+function deploy_git_prompt() {
   export PS1="\\w\$(__git_ps1 '(%s)') \$ "
 }
 
