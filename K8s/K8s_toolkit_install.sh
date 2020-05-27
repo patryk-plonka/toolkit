@@ -23,15 +23,15 @@ readonly __base="$(basename ${__file} .sh)"
 main () {
 #  arg1="${1:-}"
 
-  update_linux
-  deploy_kubectl
-  deploy_kubectl_aliases
-#  deploy_kubectl_plugins
-#  deploy_kubectl_prompt
-  deploy_k9s
-  deploy_helm
-  deploy_istioctl
-
+#  update_linux
+#  deploy_kubectl
+#  deploy_kubectl_aliases
+  deploy_kubectl_plugins
+  deploy_kubectl_prompt
+#  deploy_k9s
+  deploy_helm3
+#  deploy_istioctl
+  
   exit 0
 }
 
@@ -105,8 +105,8 @@ deploy_k9s() {
 }
 
 # Install HELM
-deploy_helm() {
-  local helm_version="v2.16.7"
+deploy_helm2() {
+  local helm2_version="v2.16.7"
   (
     cd "$(mktemp -d)"
     curl --location --remote-name "https://get.helm.sh/helm-${helm_version}-linux-amd64.tar.gz"
@@ -114,6 +114,20 @@ deploy_helm() {
     chmod +x "./linux-amd64/helm"
     mkdir --parents "~/.helm/bin"
     mv "./linux-amd64/helm" "~/.helm/bin/helm2"
+    add_to_path "~/.helm/bin"
+  )
+}
+
+#Install HELM 3
+deploy_helm3() {
+  local helm3_version="v3.2.1"
+  (
+    cd "$(mktemp -d)"
+    curl --location --remote-name "https://get.helm.sh/helm-${helm_version}-linux-amd64.tar.gz"
+    tar xvzf "helm-${helm_version}-linux-amd64.tar.gz"
+    chmod +x "./linux-amd64/helm"
+    mkdir --parents "~/.helm/bin"
+    mv "./linux-amd64/helm" "~/.helm/bin/helm"
     add_to_path "~/.helm/bin"
   )
 }
@@ -126,6 +140,11 @@ deploy_istioctl() {
     #source ~/istioctl.bash
     add_to_path "~/.istioctl/bin"
   )
+}
+
+# Install GIT Bash Prompt
+function deploy_git_prompt{
+  export PS1="\\w\$(__git_ps1 '(%s)') \$ "
 }
 
 # Add to PATH
