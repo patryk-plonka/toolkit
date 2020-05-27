@@ -29,7 +29,7 @@ main () {
 #  deploy_kubectl_plugins
 #  deploy_kubectl_prompt
 #  deploy_k9s
-  deploy_helm3
+#  deploy_helm3
 #  deploy_istioctl
   
   exit 0
