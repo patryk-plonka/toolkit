@@ -58,7 +58,7 @@ deploy_kubectl() {
 deploy_kubectl_aliases() {
   (
     cd "${HOME}"
-    curl --location --remote-name https://raw.githubusercontent.com/ahmetb/kubectl-aliases/master/.kubectl_aliases
+    curl --location --remote-name "https://raw.githubusercontent.com/ahmetb/kubectl-aliases/master/.kubectl_aliases"
     [ -f ./.kubectl_aliases ]
     source ./.kubectl_aliases
   )
@@ -66,7 +66,7 @@ deploy_kubectl_aliases() {
 
 # Install CTX and NS plugin
 deploy_kubectl_plugins() {
-  local krew_version="v0.3.4"
+  local krew_version=$(extract_newest_version "https://api.github.com/repos/kubernetes-sigs/krew/releases")
   (
   cd "$(mktemp -d)"
     curl --fail --silent --show-error --location --remote-name "https://github.com/kubernetes-sigs/krew/releases/download/${krew_version}/krew.{tar.gz,yaml}"
@@ -93,7 +93,7 @@ deploy_kubectl_prompt() {
 
 # Install K9s
 deploy_k9s() {
-  local k9s_version="v0.19.6"
+  local k9s_version=$(extract_newest_version "https://api.github.com/repos/derailed/k9s/releases")
   (
     cd "$(mktemp -d)"
     curl --location --remote-name "https://github.com/derailed/k9s/releases/download/${k9s_version}/k9s_Linux_x86_64.tar.gz"
@@ -144,12 +144,12 @@ deploy_istioctl() {
 }
 
 # Install GIT Bash Prompt
-function deploy_git_prompt() {
+deploy_git_prompt() {
   export PS1="\\w\$(__git_ps1 '(%s)') \$ "
 }
 
 # Add to PATH
-function add_to_path {
+add_to_path() {
   case ":$PATH:" in
     *":$1:"*) :;; # already there
     *) PATH="$PATH:$1";; 
@@ -157,8 +157,13 @@ function add_to_path {
 }
 
 # Trim PATH variable from duplicates
-function trim_path(){
+trim_path(){
   PATH=$(printf "%s" "$PATH" | awk -v RS=':' '!a[$1]++ { if (NR > 1) printf RS; printf $1 }')
+}
+
+extract_newest_version() {
+  local version=$(curl -L -s $1 | grep "tag_name" | sed "s/ *\"tag_name\": *\"\\(.*\\)\",*/\\1/" | grep -v -E "(alpha|beta|rc)\.[0-9]$" | sort -t"." -k 1,1 -k 2,2 -k 3,3 -k 4,4 | tail -n 1 )
+  exit ${version}
 }
 
 main "${@}"
