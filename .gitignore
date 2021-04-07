@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# secret configs
+*.properties
+
+# C# distribution & packaging
+bin/
+obj/
+
+# VS Code properties
+.vscode
