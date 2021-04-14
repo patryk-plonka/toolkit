@@ -4,6 +4,7 @@ using Microsoft.Azure.Management.Compute.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
+using Microsoft.Azure.Management.Network.Fluent.Models;
 
 namespace VM
 {
@@ -22,6 +23,8 @@ namespace VM
             var nicName = "nic-vm-westeu-1";
             var adminUser = "azurevmroot";
             var adminPassword = "P@$$w0rd!";
+            var publicIPName = "pip-vm-test-westeu-1";
+            var nsgName = "nsg-vm-test-westeu-1";
 
             
             //Creates management client
@@ -39,6 +42,32 @@ namespace VM
                 .WithAddressSpace(vNetAddress)
                 .WithSubnet(subnetName, subnetAddress)
                 .Create();   
+            // Optional
+            Console.WriteLine($"Creating PIP: {publicIPName}");
+            var pip = azure.PublicIPAddresses.Define(publicIPName)
+                .WithRegion(location)
+                .WithExistingResourceGroup(groupName)
+                .Create();
+            // Optional
+            Console.WriteLine($"Creating NSG: {nsgName}");
+            var nsg = azure.NetworkSecurityGroups.Define(nsgName)
+                .WithRegion(location)
+                .WithExistingResourceGroup(groupName)
+                .Create();
+            // Optional
+            Console.WriteLine($"Creating sec rule: Allow RDP");
+            nsg.Update()
+                .DefineRule("Allow-RDP")
+                    .AllowInbound()
+                    .FromAnyAddress()
+                    .FromAnyPort()
+                    .ToAnyAddress()
+                    .ToPort(3389)
+                    .WithProtocol(SecurityRuleProtocol.Tcp)
+                    .WithPriority(100)
+                    .WithDescription("Allow-RDP")
+                    .Attach()
+                .Apply();                    
             Console.WriteLine($"Creating NIC: {nicName}");
             var nic = azure.NetworkInterfaces.Define(nicName)
                 .WithRegion(location)
@@ -46,6 +75,10 @@ namespace VM
                 .WithExistingPrimaryNetwork(vnet)
                 .WithSubnet(subnetName)
                 .WithPrimaryPrivateIPAddressDynamic()
+                // Optional
+                .WithExistingPrimaryPublicIPAddress(pip)
+                .WithExistingNetworkSecurityGroup(nsg)
+                //
                 .Create();
             Console.WriteLine($"Creating VM: {vmName}");
             var vm = azure.VirtualMachines.Define(vmName)
